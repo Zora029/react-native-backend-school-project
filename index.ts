@@ -8,6 +8,14 @@ dotenv.config();
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
+const host = process.env.HOST ?? "0.0.0.0";
+
+const corsOptions: cors.CorsOptions = {
+  origin: "*",
+  credentials: false,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
 const pool = new Pool({
   host: process.env.DB_HOST,
@@ -50,7 +58,8 @@ const updateClientSchema = z
     message: "At least one field is required to update",
   });
 
-app.use(cors());
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json());
 
 app.get(
@@ -195,8 +204,10 @@ const initializeDatabase = async () => {
 const startServer = async () => {
   try {
     await initializeDatabase();
-    app.listen(port, () => {
-      console.log(`API server is running on http://localhost:${port}`);
+    app.listen(port, host, () => {
+      console.log(
+        `API server is running on http://localhost:${port} (listening on ${host})`,
+      );
     });
   } catch (error) {
     console.error("Unable to start server:", error);
